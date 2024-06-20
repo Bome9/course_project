@@ -1,0 +1,9 @@
+.myBtn {
+    display: flex;
+    padding: 5px 10px;
+    background-color: rgb(235, 149, 0);
+    color: rgb(255, 255, 255);
+    border: 1px solid rgb(255, 106, 0);
+    cursor: pointer;
+    border-radius: 5px;
+}
