@@ -1,78 +1,58 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import './styles/App.css';
 import PostList from './components/PostList';
 import PostForm from './components/PostForm';
-import MySelect from './components/UI/select/MySelect';
-import MyInput from './components/UI/input/MyInput';
+import PostFilter from './components/PostFilter';
+import MyModal from './components/UI/MyModal/MyModal';
+import MyButton from './components/UI/button/MyButton';
+import { usePosts } from './hooks/usePosts';
+import axios from 'axios';
 
 const App = () => {
 
+    const [posts, setPosts] = useState([])
 
-    const [posts, setPosts] = useState([
-        { id: 1, title: "Apple", body: "Hello." },
-        { id: 2, title: "JBox", body: "Sex" },
-        { id: 3, title: "Pussy", body: "Fucker" }
-    ])
+    const [filter, setFilter] = useState({ sort: '', query: '' })
+    const [modal, setModal] = useState(false)
 
-    const [selectedSort, setSelectedSort] = useState('')
-    const [searchQuery, setSearchQuery] = useState('')
+    const sortedAndSearchedPosts = usePosts(posts, filter.sort, filter.query)
 
-
-    const sortedPosts = useMemo(() => {
-        console.log('Функция сорт отработала')
-        if (selectedSort) {
-            return [...posts.sort((a, b) => a[selectedSort].localeCompare(b[selectedSort]))]
-        }
-        return posts;
-    }, [selectedSort, posts])
-
-
-    const sortedAndSearchedPosts = useMemo(() => {
-        return sortedPosts.filter(post => post.title.toLowerCase().includes(searchQuery.toLowerCase()))
-    }, [searchQuery, sortedPosts] )
 
     const createPost = (newPost) => {
         setPosts([...posts, newPost])
+        setModal(false)
     }
+
+
+    async function fetchPosts() {
+        const response = await axios.get('https://jsonplaceholder.typicode.com/posts')
+        console.log(response)
+        setPosts(response.data)
+    }
+
 
     const removePost = (post) => {
         setPosts(posts.filter(p => p.id !== post.id))
     }
 
 
-    const sortPosts = (sort) => {
-        setSelectedSort(sort);
-    }
-
     return (
 
         <div className='App'>
-            <PostForm create={createPost} />
-            <hr style={{ margin: '15px 0' }} />
-            <div>
-                <MyInput
-                    placeholder="Поиск по названию"
-                    vlaue={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                />
-                <MySelect
-                    value={selectedSort}
-                    onChange={sortPosts}
-                    defaultValue="Сортировка по:"
-                    options={[
-                        { value: 'title', name: 'По названию' },
-                        { value: 'body', name: 'По содержанию' }
-                    ]}
-                />
-            </div>
 
-            {sortedAndSearchedPosts.length
-                ?
-                <PostList posts={sortedAndSearchedPosts} remove={removePost} title='Посты про JS' />
-                :
-                <h1 style={{ textAlign: "center", color: "orange" }} >   Посты отсутствуют
-                </h1>
-            }
+            <MyButton style={{ marginTop: 30}} onClick={fetchPosts}>Получить посты</MyButton>
+
+            <MyButton style={{ marginTop: 30}} onClick={() => setModal(true)} >
+                Создать пост
+            </MyButton>
+
+            <MyModal visible={modal} setVisible={setModal}>
+                <PostForm create={createPost} />
+            </MyModal>
+
+            <PostFilter filter={filter} setFilter={setFilter} />
+
+            <PostList posts={sortedAndSearchedPosts} remove={removePost} title='Посты про JS' />
 
 
         </div>
